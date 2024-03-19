@@ -18,6 +18,19 @@ public class Region {
     public long region_extensive_attr;
     private long region_heterogeneity;
     private ArrayList<Area> neigh_areas;
+    private long curr_capacity;
+    private long school_capacity;
+    private Boolean pop_lt_capacity;
+    private double hetero_weighting;
+    private double region_heterogenity_balance;
+    private double getRegion_heterogeneity_compactness;
+
+    private double calculate_hetero_balance(double cap, double total_students){
+        return 100 * (1-Math.abs((cap - total_students)/cap));
+    }
+    private double calculate_hetero_compactness (double A, double p){
+        return 100 * 4 * Math.PI * A/Math.pow(p, 2);
+    }
 
 
     public Region(int region_id , Area g , long threshold , ArrayList<Area> all_areas)
@@ -37,10 +50,16 @@ public class Region {
         {
             region_complete = true;
         }
+        this.pop_lt_capacity = false;
+        this.hetero_weighting = 0.5;
+        this.region_heterogenity_balance = calculate_hetero_balance(g.get_similarity_attr_school_cap(), g.get_sim_attr());
+        this.getRegion_heterogeneity_compactness = calculate_hetero_compactness(g.get_area(), g.get_polygon().getLength());
     }
 
     public Region(ArrayList<Area> areas_in_region , long threshold , long hetero , long total_extensive_attribute)
     {
+        this.pop_lt_capacity = false;
+        this.hetero_weighting = 0.5;
         if(hetero > 0 && total_extensive_attribute > 0)
         {
             this.areas_in_region = areas_in_region;
@@ -111,13 +130,15 @@ public class Region {
 
 
 
-        region_extensive_attr += area.get_extensive_attr();
-        if(region_extensive_attr > threshold)
-        {
-            this.region_complete = true;
-        }
-        long incre = compute_hetero_incre(area);
-        region_heterogeneity += incre;
+//        region_extensive_attr += area.get_extensive_attr();
+//        if(region_extensive_attr > threshold)
+//        {
+//            this.region_complete = true;
+//        }
+//        long incre = compute_hetero_incre(area);
+//        region_heterogeneity += incre;
+
+        curr_capacity -= area.get_internal_attr();
 
 
 
@@ -269,6 +290,24 @@ public class Region {
             hetero_incre += Math.abs(area.get_internal_attr() - current_area.get_internal_attr());
         }
         return hetero_incre;
+//        // TODO: find issue in Hetero increase:
+//        double abs_portion = (this.region_heterogenity_balance * -1 / 100+1);
+//        if(! this.pop_lt_capacity){
+//            abs_portion = -1 * abs_portion;
+//        }
+//        double total_students = -1 * this.school_capacity * abs_portion - this.school_capacity;
+//        double new_hetero_balance = calculate_hetero_balance(this.school_capacity, total_students + area.get_sim_attr());
+//        double increase_balance = this.region_heterogenity_balance - new_hetero_balance;
+//
+//        double area_to_add = area.get_area();
+//        double perimeter_to_add = area.get_polygon().getLength();
+//        double perimeter_to_subtract = 0;
+//        for (Area neigh: area.get_neigh_area(all_areas)){
+//            if(neigh.get_associated_region_index() == area.get_associated_region_index()){
+//                perimeter_to_subtract += 
+//            }
+//        }
+
     }
 
     public int compute_connection_num(Area g)
@@ -385,6 +424,11 @@ public class Region {
     {
         return region_heterogeneity;
     }
+
+    public long get_curr_capacity() {return curr_capacity; }
+    public void set_curr_capacity(long cap) { curr_capacity = cap; }
+    public long get_school_capacity() {return school_capacity; }
+    public void set_school_capacity(long cap) { school_capacity = cap; }
 
 
     public static long get_all_region_hetero(Region[] regions)

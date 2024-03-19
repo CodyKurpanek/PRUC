@@ -3,6 +3,8 @@ package util;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
 import org.geotools.data.FeatureSource;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.locationtech.jts.geom.Coordinate;
@@ -25,10 +27,21 @@ public class Preprocess {
 
     public static ArrayList<Area> GeoSetBuilder(String dataset) throws IOException {
         ArrayList<Area> areas = new ArrayList<>();
-        FeatureCollection<SimpleFeatureType, SimpleFeature> collection = preprocess(dataset);
-        ArrayList<Geometry> polygons = initial_construct(collection , areas, dataset);
+        FeatureCollection<SimpleFeatureType, SimpleFeature> collection = null;
+        FeatureCollection<SimpleFeatureType, SimpleFeature> collection1 = null;
+        //=================================================================================================
+        if(dataset.equals("redistricting3") || dataset.equals("redistrictingES") || dataset.equals("redistrictingMS") || dataset.equals("redistrictingHS")){
+            collection = preprocess("redistricting1");
+            collection1 = preprocess("redistricting2");
+        }
+        //=============================================================================================================
+        else{
+            collection = preprocess(dataset);
+        }
+        ArrayList<Geometry> polygons = initial_construct(collection, collection1, areas, dataset);
         setNeighbors(polygons , areas);
         return areas;
+
     }
 
     private static FeatureCollection<SimpleFeatureType, SimpleFeature> preprocess(String dataset) throws IOException {
@@ -71,6 +84,12 @@ public class Preprocess {
             case "80k":
                 file = new File("DataFile/80K/80K.shp");
                 break;
+            case "redistricting1":
+                file = new File("DataFile/redistricting/SPAs-polygon.shp");
+                break;
+            case "redistricting2":
+                file = new File("DataFile/redistricting/Schools-point.shp");
+                break;
         }
         //System.out.println(file.getTotalSpace());
         Map<String, Object> map = new HashMap<>();
@@ -81,18 +100,26 @@ public class Preprocess {
                 dataStore.getFeatureSource(typeName);
         Filter filter = Filter.INCLUDE;
         dataStore.dispose();
-        return source.getFeatures(filter);
+        //================================================================================
+        FeatureCollection<SimpleFeatureType, SimpleFeature> collection = source.getFeatures(filter);
+        System.out.println(collection.getSchema().getAttributeCount());
+        System.out.println(collection.getSchema().toString());
+        return collection;
     }
 
-    private static ArrayList<Geometry> initial_construct(FeatureCollection<SimpleFeatureType, SimpleFeature> collection , ArrayList<Area> areas, String dataset)
+    private static ArrayList<Geometry> initial_construct(FeatureCollection<SimpleFeatureType, SimpleFeature> collection, FeatureCollection<SimpleFeatureType, SimpleFeature> optionalCollection, ArrayList<Area> areas, String dataset)
     {
         ArrayList<Geometry> polygons = new ArrayList<>();
-        int geo_index = 0;
+        long geo_index = 1;
+        int spa_num = 0;
+        int num_schools = 0;
         try (FeatureIterator<SimpleFeature> features = collection.features()) {
             while (features.hasNext()) {
+                spa_num++;
                 SimpleFeature feature = features.next();
                 long extensive_attr ;
                 long internal_attr;
+                long extensive_attr_school_cap = -1;
 
                 if(dataset.equals("2k"))
                 {
@@ -105,8 +132,38 @@ public class Preprocess {
                     extensive_attr = (long)Double.parseDouble((feature.getAttribute("cty_pop200").toString()));
                     internal_attr = (long)(1000 * Double.parseDouble((feature.getAttribute("ratio").toString())));
 
+                }//======================================================================
+                else if (dataset.equals("redistricting1"))
+                {
+                    extensive_attr = Long.parseLong((feature.getAttribute("ELEM_POP").toString()));
+                    internal_attr  = Long.parseLong(feature.getAttribute("HIGH_POP").toString());
                 }
-
+                else if (dataset.equals("redistricting2"))
+                {
+                    extensive_attr = Long.parseLong((feature.getAttribute("MID_").toString()));
+                    internal_attr  = Long.parseLong(feature.getAttribute("HIGH_").toString());
+                }
+                else if(dataset.startsWith("redistricting")){
+                    String requiredSchoolType = dataset.substring(dataset.length()-2);
+                    extensive_attr = 0;
+                    try (SimpleFeatureIterator school_iterator = ((SimpleFeatureCollection)optionalCollection).features()) {
+                        while (school_iterator.hasNext()) {
+                            SimpleFeature school_feature = school_iterator.next();
+                            String schoolSPA  = school_feature.getAttribute("SPA").toString();
+                            String schoolType = school_feature.getAttribute("SCHOOL_TYP").toString();
+                            if (feature.getAttribute("SPA").equals(schoolSPA) && schoolType.equals(requiredSchoolType)){
+                                System.out.println(requiredSchoolType + " found in SPA " + geo_index + ", num " + requiredSchoolType + " matched:" + num_schools);
+                                extensive_attr = 1;
+                                num_schools++;
+                                extensive_attr_school_cap = Long.parseLong(school_feature.getAttribute("CAPACITY").toString());
+                            }
+                        }
+                    }
+                    String pop = requiredSchoolType.replace("ES", "ELEM_POP");
+                    pop = pop.replace("MS", "MID_POP");
+                    pop = pop.replace("HS", "HIGH_POP");
+                    internal_attr  = Long.parseLong(feature.getAttribute(pop).toString());
+                }
                 else
                 {
                     extensive_attr = Long.parseLong((feature.getAttribute("ALAND").toString()));
@@ -116,8 +173,8 @@ public class Preprocess {
                 Geometry polygon = (Geometry) feature.getDefaultGeometry();
                 polygons.add(polygon);
                 Coordinate[] coor = polygon.getCoordinates();
-                Area newArea = new Area(geo_index , internal_attr , extensive_attr , coor);
-                geo_index ++;
+                geo_index = Long.parseLong((feature.getAttribute("OBJECTID").toString()));
+                Area newArea = new Area((int)geo_index , internal_attr , extensive_attr , extensive_attr_school_cap , coor);
                 areas.add(newArea);
             }
         }

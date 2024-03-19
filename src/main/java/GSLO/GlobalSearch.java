@@ -5,6 +5,12 @@ import util.Region;
 
 import java.util.ArrayList;
 
+//package json;
+//import io.json.JSONObject;
+//
+//import java.io.FileWriter;
+//import java.io.IOException;
+
 /**
  * This class corresponds to the Section 5.1 Global Search
  */
@@ -56,47 +62,72 @@ public class GlobalSearch {
 
         long seeding_end = System.nanoTime();
         this.seed_time = seeding_end - seeding_start;
+        int total_areas_count = 0;
+        for (Area a: all_areas){
+            int geo_index = a.get_geo_index();
+            long isSchool = a.get_extensive_attr();
+//                    JSONObject jsonObject = new JSONObject();
+//                    jsonObject.put("x", coordinate.getX());
+//                    jsonObject.put("y", coordinate.getY());
+//                    jsonArray.put(jsonObject);
+            System.out.println(isSchool + " " + geo_index);
+            total_areas_count ++;
+
+
+        }
+//        System.out.println(total_areas_count);
+        System.out.println("this is after");
 
         long region_growth_start = System.nanoTime();
         regions = new RegionGrowth(seed , threshold , all_areas).grow_region_robust();
         long region_growth_end = System.nanoTime();
         this.region_growth_time = region_growth_end - region_growth_start;
-
-
-        long assign_enclaves_start = System.nanoTime();
-        new EnclavesAssignment(all_areas , regions);
-        long assign_enclaves_ends = System.nanoTime();
-        this.enclaves_assign_time = assign_enclaves_ends - assign_enclaves_start;
-
-
-        if(!solved())
-        {
-            long interregion_start = System.currentTimeMillis();
-            new InterregionUpdate(regions, all_areas).region_adjustment();
-            long interregion_end = System.currentTimeMillis();
-            this.interregion_update_time = interregion_end - interregion_start;
-            this.interregion_flag = true;
+        int i = 0;
+        total_areas_count = 0;
+        for (Region region : regions){
+            for (Area a : region.get_areas_in_region()){
+                total_areas_count++;
+                System.out.println(i + " " + a.get_geo_index());
+            }
+            i++;
         }
+//        System.out.println(total_areas_count);
 
-        else
-        {
-            this.interregion_flag = false;
-        }
 
-        if(!solved())
-        {
-            long flow_start = System.currentTimeMillis();
-            new IndirectFlowPush(regions , threshold , all_areas).flow_pushing();
-            long flow_end = System.currentTimeMillis();
-            this.indirect_flow_time = flow_end - flow_start;
-            this.flow_flag = true;
+//        long assign_enclaves_start = System.nanoTime();
+//        new EnclavesAssignment(all_areas , regions);
+//        long assign_enclaves_ends = System.nanoTime();
+//        this.enclaves_assign_time = assign_enclaves_ends - assign_enclaves_start;
 
-        }
 
-        else
-        {
-            this.flow_flag = false;
-        }
+//        if(!solved())
+//        {
+//            long interregion_start = System.currentTimeMillis();
+//            new InterregionUpdate(regions, all_areas).region_adjustment();
+//            long interregion_end = System.currentTimeMillis();
+//            this.interregion_update_time = interregion_end - interregion_start;
+//            this.interregion_flag = true;
+//        }
+//
+//        else
+//        {
+//            this.interregion_flag = false;
+//        }
+//
+//        if(!solved())
+//        {
+//            long flow_start = System.currentTimeMillis();
+//            new IndirectFlowPush(regions , threshold , all_areas).flow_pushing();
+//            long flow_end = System.currentTimeMillis();
+//            this.indirect_flow_time = flow_end - flow_start;
+//            this.flow_flag = true;
+//
+//        }
+//
+//        else
+//        {
+//            this.flow_flag = false;
+//        }
 
 
 

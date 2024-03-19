@@ -6,6 +6,8 @@ import GSLO.GlobalSearch;
 import baseline.greedy.*;
 import baseline.skater.ModifiedSKATER;
 import baseline.skatercon.ModifiedSKATERCON;
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.opengis.feature.simple.SimpleFeature;
 import util.Area;
 import util.Preprocess;
 import util.Region;
@@ -17,7 +19,16 @@ public class TestGeneral {
 
 
     public static void main(String args[]) throws InterruptedException, CloneNotSupportedException, IOException {
-        
+
+        System.out.println("starting");
+        ArrayList<Area> all_areas = Preprocess.GeoSetBuilder("redistrictingMS");
+        GlobalSearch sol = new GlobalSearch(Area.area_list_copy(all_areas) ,16 , all_areas.size(), 1 , false);
+        System.out.println();
+
+
+
+
+
 
 
 
@@ -29,48 +40,48 @@ public class TestGeneral {
         int skater_iter = 100;
         int iter_scalable_test = 10;
 
-        System.out.println("----------          experiment starts          ----------");
-        System.out.println("The following experiment will run in sequence");
-        System.out.println("1.Test how the number of iterations in Seed Identification(ISI) affect seed quality, heterogeneity, runtime and explore random seeding and k-means++ seeding under the TIGER dataset");
-        System.out.println("2.Test time breakdown of GSLO in different p under the TIGER dataset");
-        System.out.println("3.Compare GSLO with Greedy in TIGER dataset regarding runtime, heterogeneity, effectiveness");
-        System.out.println("4.Compare GSLO with Greedy in island dataset regarding runtime, heterogeneity and effectiveness");
-        System.out.println("5.Test how the number of iterations in Local Optimization(ILO) affect the heterogeneity and runtime");
-        System.out.println("6.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the TIGER dataset when changing p");
-        System.out.println("7.Test the heterogeneity and runtime of GS under the TIGER dataset when changing p");
-        System.out.println("8.Test the heterogeneity and runtime of GS under the HID dataset when changing p");
-        System.out.println("9.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the HID dataset when changing p");
-        System.out.println("10.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the TIGER dataset when solving p-regions problem under different p");
-        System.out.println("11.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the HID dataset when solving p-regions problem under different p");
-        System.out.println("12.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the TIGER dataset when changing threshold");
-        System.out.println("13.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the HID dataset when changing threshold");
-        System.out.println("14.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the TIGER dataset when changing threshold");
-        System.out.println("15.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the HID dataset when changing threshold");
-        System.out.println("16.test the effectiveness of GSLO, SKATER* and SKATERCON* under the TIGER dataset");
-        System.out.println("17.test the effectiveness of GSLO, SKATER* and SKATERCON* under the HID dataset");
-        System.out.println("18.test the scalability of GSLO, SKATER* and SKATERCON* under different sizes of dataset in the TIGER");
+//        System.out.println("----------          experiment starts          ----------");
+//        System.out.println("The following experiment will run in sequence");
+//        System.out.println("1.Test how the number of iterations in Seed Identification(ISI) affect seed quality, heterogeneity, runtime and explore random seeding and k-means++ seeding under the TIGER dataset");
+//        System.out.println("2.Test time breakdown of GSLO in different p under the TIGER dataset");
+//        System.out.println("3.Compare GSLO with Greedy in TIGER dataset regarding runtime, heterogeneity, effectiveness");
+//        System.out.println("4.Compare GSLO with Greedy in island dataset regarding runtime, heterogeneity and effectiveness");
+//        System.out.println("5.Test how the number of iterations in Local Optimization(ILO) affect the heterogeneity and runtime");
+//        System.out.println("6.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the TIGER dataset when changing p");
+//        System.out.println("7.Test the heterogeneity and runtime of GS under the TIGER dataset when changing p");
+//        System.out.println("8.Test the heterogeneity and runtime of GS under the HID dataset when changing p");
+//        System.out.println("9.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the HID dataset when changing p");
+//        System.out.println("10.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the TIGER dataset when solving p-regions problem under different p");
+//        System.out.println("11.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the HID dataset when solving p-regions problem under different p");
+//        System.out.println("12.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the TIGER dataset when changing threshold");
+//        System.out.println("13.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the HID dataset when changing threshold");
+//        System.out.println("14.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the TIGER dataset when changing threshold");
+//        System.out.println("15.Test the heterogeneity and runtime of GSLO, SKATER*, and SKATERCON* under the HID dataset when changing threshold");
+//        System.out.println("16.test the effectiveness of GSLO, SKATER* and SKATERCON* under the TIGER dataset");
+//        System.out.println("17.test the effectiveness of GSLO, SKATER* and SKATERCON* under the HID dataset");
+//        System.out.println("18.test the scalability of GSLO, SKATER* and SKATERCON* under different sizes of dataset in the TIGER");
 
 
-        var_iter_seed_quality(GSLO_iter , scale , default_p  , "2k");
-        test_time_breakdown(GSLO_iter ,  scale , "2k" );
-        greedy_baseline(GSLO_iter , scale , "island" , true);
-        greedy_baseline(GSLO_iter , scale , "diversity" , false);
-        var_max_no_move(GSLO_iter , scale ,  "2k");
-        var_p_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , scale , "2k");
-        baseline_GS(GSLO_iter , scale , "2k");
-        baseline_GS(GSLO_iter, scale , "diversity");
-        var_p_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , scale , "diversity");
-        var_p_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , 0 , "2k");
-        var_p_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , 0 , "diversity");
-        var_thre_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , default_p , scale , "2k");
-        var_thre_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , default_p , scale , "diversity");
-        var_p_finding_feasible_partition(iter_prob , scale , "2k");
-        var_p_finding_feasible_partition(iter_prob , scale , "diversity");
-        var_thre_finding_feasible_partition(iter_prob , scale , "2k");
-        var_thre_finding_feasible_partition(iter_prob , scale , "diversity");
-        var_dataset_hetero_runtime(iter_scalable_test , default_p , iter_scalable_test , iter_skatercon,  scale);
-
-        
+//        var_iter_seed_quality(GSLO_iter , scale , default_p  , "redistrictingHS");
+//        test_time_breakdown(GSLO_iter ,  scale , "2k" );
+//        greedy_baseline(GSLO_iter , scale , "island" , true);
+//        greedy_baseline(GSLO_iter , scale , "diversity" , false);
+//        var_max_no_move(GSLO_iter , scale ,  "2k");
+//        var_p_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , scale , "redistricting1");
+//        baseline_GS(GSLO_iter , scale , "2k");
+//        baseline_GS(GSLO_iter, scale , "diversity");
+//        var_p_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , scale , "diversity");
+//        var_p_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , 0 , "2k");
+//        var_p_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , 0 , "diversity");
+//        var_thre_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , default_p , scale , "2k");
+//        var_thre_measure_hetero_runtime(GSLO_iter , skater_iter , iter_skatercon , default_p , scale , "diversity");
+//        var_p_finding_feasible_partition(iter_prob , scale , "2k");
+//        var_p_finding_feasible_partition(iter_prob , scale , "diversity");
+//        var_thre_finding_feasible_partition(iter_prob , scale , "2k");
+//        var_thre_finding_feasible_partition(iter_prob , scale , "diversity");
+//        var_dataset_hetero_runtime(iter_scalable_test , default_p , iter_scalable_test , iter_skatercon,  scale);
+//
+//
         System.out.println("----------          experiment ends        ----------");
 
     }
