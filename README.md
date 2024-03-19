@@ -1,3 +1,27 @@
+### Pruc Applied to Regal.
+This is the fork of the PRUC: P-Regions with User-Defined Constraints repository. We use apply this model to the redistricting problem. Please look at the PRUC description further below for an explanation of the PRUC method.
+
+For a description of what we did, please check our report.
+
+#### How to run the code and read the output:
+Change the dataset in src/main/java/test/TestGeneral.java to either 
+redistrictingES, redistrictingMS, or redistrictingHS.
+
+Click play button on IntelliJ or run the following 2 commands:
+
+mvn compile
+
+mvn exec:java -Dexec.mainClass=test.TestGeneral
+
+
+The output will first show preprocessing information of how many schools are matched with a unique SPA and will show the seeded regions.
+
+Next, we output data that can be plotted in order to visualize how our algorithm does.
+
+The first output displayed which areas were marked as the seeded areas. The seed identification step was quite simple to implement because we were already given what areas contain a school. This means that we were able to meet the user-defined constraint (a region must contain one school and one school only) in the first process of the global search phase. At this point, we can grow these seeded areas (regions) in the next process. Once the region growth process finishes with all regions being complete and no enclaved assignments, we output all areas respective region ID and SPA ID. Each of these output was used to visualize the partitions of the district. We created a python script, using the GeoPandas and Matplotlib library to produce several maps that depict these partitions. 
+
+Please check the Visualize folder to see how to use these values to visualize the districts.
+
 
 
 #### PRUC:
